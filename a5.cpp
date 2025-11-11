@@ -1,103 +1,241 @@
 #include <iostream>
 #include <string>
-#include <limits>
 using namespace std;
 
-struct Student {
-    int roll;
+class StudentNode {
+public:
+    int roll_no;
     string name;
     float marks;
-    Student* next;
-    Student(int r, string n, float m) { roll=r; name=n; marks=m; next=nullptr; }
+    StudentNode* prev;
+    StudentNode* next;
+
+    StudentNode(int r, string n, float m) {
+        roll_no = r;
+        name = n;
+        marks = m;
+        prev = nullptr;
+        next = nullptr;
+    }
 };
 
-class StudentList {
-    Student* head;
+class StudentLinkedList {
+private:
+    StudentNode* head;
+
 public:
-    StudentList() { head=nullptr; }
-
-    void add(int r,string n,float m) {
-        Student* node=new Student(r,n,m);
-        if(!head) head=node;
-        else { Student* t=head; while(t->next) t=t->next; t->next=node; }
-        cout<<"Added "<<n<<"\n";
+    StudentLinkedList() {
+        head = nullptr;
     }
 
-    void display() {
-        if(!head){ cout<<"No records\n"; return; }
-        Student* t=head;
-        cout<<"Roll\tName\tMarks\n";
-        while(t){ cout<<t->roll<<"\t"<<t->name<<"\t"<<t->marks<<"\n"; t=t->next; }
+    // Add student at end
+    void add_student(int roll_no, string name, float marks) {
+        StudentNode* new_node = new StudentNode(roll_no, name, marks);
+        if (head == nullptr) {
+            head = new_node;
+        } else {
+            StudentNode* temp = head;
+            while (temp->next != nullptr)
+                temp = temp->next;
+            temp->next = new_node;
+            new_node->prev = temp;
+        }
+        cout << "Student added successfully.\n";
     }
 
-    Student* search(int r) {
-        Student* t=head;
-        while(t){ if(t->roll==r){ cout<<"Found "<<t->name<<"\n"; return t; } t=t->next; }
-        cout<<"Not found\n"; return nullptr;
-    }
-
-    void update(int r,string n="",float m=-1){
-        Student* t=search(r);
-        if(t){ if(!n.empty()) t->name=n; if(m>=0) t->marks=m; cout<<"Updated\n"; }
-    }
-
-    void remove(int r){
-        Student* t=head,*p=nullptr;
-        while(t){ if(t->roll==r){ if(p) p->next=t->next; else head=t->next; delete t; cout<<"Deleted\n"; return; } p=t; t=t->next; }
-        cout<<"Not found\n";
-    }
-
-    void sort(bool byMarks=false,bool desc=false){
-        if(!head||!head->next) return;
-        bool swapped;
-        do{
-            swapped=false;
-            Student* t=head;
-            while(t->next){
-                bool cond=!byMarks? (!desc && t->roll>t->next->roll) || (desc && t->roll<t->next->roll)
-                               : (!desc && t->marks>t->next->marks) || (desc && t->marks<t->next->marks);
-                if(cond){ swap(t->roll,t->next->roll); swap(t->name,t->next->name); swap(t->marks,t->next->marks); swapped=true; }
-                t=t->next;
+    // Delete student by roll number
+    void delete_student(int roll_no) {
+        StudentNode* temp = head;
+        while (temp != nullptr) {
+            if (temp->roll_no == roll_no) {
+                if (temp->prev != nullptr)
+                    temp->prev->next = temp->next;
+                if (temp->next != nullptr)
+                    temp->next->prev = temp->prev;
+                if (temp == head)
+                    head = temp->next;
+                delete temp;
+                cout << "Student deleted successfully.\n";
+                return;
             }
-        }while(swapped);
-        cout<<"Sorted\n";
+            temp = temp->next;
+        }
+        cout << "Student not found.\n";
+    }
+    
+    // Update student by roll number
+    void update_student(int roll_no, string new_name, float new_marks) {
+        StudentNode* temp = head;
+        while (temp != nullptr) {
+            if (temp->roll_no == roll_no) {
+                temp->name = new_name;
+                temp->marks = new_marks;
+                cout << "Student updated successfully.\n";
+                return;
+            }
+            temp = temp->next;
+        }
+        cout << "Student not found.\n";
+    }
+
+    // Search student by roll number
+    void search_student(int roll_no) {
+        StudentNode* temp = head;
+        while (temp != nullptr) {
+            if (temp->roll_no == roll_no) {
+                cout << "Found -> Roll No: " << temp->roll_no
+                     << ", Name: " << temp->name
+                     << ", Marks: " << temp->marks << endl;
+                return;
+            }
+            temp = temp->next;
+        }
+        cout << "Student not found.\n";
+    }
+
+    // Display all students
+    void display_students() {
+        if (head == nullptr) {
+            cout << "No records to display.\n";
+            return;
+        }
+
+        cout << "\nStudent Records:\n";
+        cout << "Roll No\tName\tMarks\n";
+        cout << "---------------------------\n";
+
+        StudentNode* temp = head;
+        while (temp != nullptr) {
+            cout << temp->roll_no << "\t" << temp->name << "\t" << temp->marks << endl;
+            temp = temp->next;
+        }
+    }
+
+    // Sort students by roll number or marks
+    void sort_students(string key, string order) {
+        if (head == nullptr) {
+            cout << "No records to sort.\n";
+            return;
+        }
+
+        bool swapped;
+        do {
+            swapped = false;
+            StudentNode* temp = head;
+            while (temp->next != nullptr) {
+                bool condition = false;
+
+                if (key == "roll_no") {
+                    condition = (order == "asc") ? 
+                                (temp->roll_no > temp->next->roll_no) :
+                                (temp->roll_no < temp->next->roll_no);
+                } 
+                else if (key == "marks") {
+                    condition = (order == "asc") ?
+                                (temp->marks > temp->next->marks) :
+                                (temp->marks < temp->next->marks);
+                } 
+                else {
+                    cout << "Invalid sort key. Use 'roll_no' or 'marks'.\n";
+                    return;
+                }
+
+                if (condition) {
+                    // Swap node data (not nodes)
+                    int r = temp->roll_no;
+                    string n = temp->name;
+                    float m = temp->marks;
+
+                    temp->roll_no = temp->next->roll_no;
+                    temp->name = temp->next->name;
+                    temp->marks = temp->next->marks;
+
+                    temp->next->roll_no = r;
+                    temp->next->name = n;
+                    temp->next->marks = m;
+
+                    swapped = true;
+                }
+                temp = temp->next;
+            }
+        } while (swapped);
+
+        cout << "Records sorted by " << key << " in " << order << " order.\n";
     }
 };
 
-int main(){
-    StudentList s;
-    int ch;
-    do{
-        cout<<"\n1.Add 2.Delete 3.Update 4.Search 5.Display 6.Sort RollAsc 7.Sort MarksDesc 8.Exit\nChoice: ";
-        if(!(cin>>ch)){ cin.clear(); cin.ignore(numeric_limits<streamsize>::max(),'\n'); cout<<"Invalid input\n"; continue; }
-        cin.ignore(numeric_limits<streamsize>::max(),'\n');
+// ---------- Main Menu ----------
+int main() {
+    StudentLinkedList sll;
+    int choice;
 
-        if(ch==1){
-            int r; string n; float m;
-            cout<<"Roll: "; cin>>r; cin.ignore(numeric_limits<streamsize>::max(),'\n');
-            cout<<"Name: "; getline(cin,n);
-            cout<<"Marks: "; cin>>m; cin.ignore(numeric_limits<streamsize>::max(),'\n');
-            s.add(r,n,m);
+    while (true) {
+        cout << "\n--- Student Record Management ---\n";
+        cout << "1. Add Student\n";
+        cout << "2. Delete Student\n";
+        cout << "3. Update Student\n";
+        cout << "4. Search Student\n";
+        cout << "5. Display Students\n";
+        cout << "6. Sort Students\n";
+        cout << "7. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            int r;
+            string n;
+            float m;
+            cout << "Enter Roll No: ";
+            cin >> r;
+            cout << "Enter Name: ";
+            cin >> n;
+            cout << "Enter Marks: ";
+            cin >> m;
+            sll.add_student(r, n, m);
+        } 
+        else if (choice == 2) {
+            int r;
+            cout << "Enter Roll No to delete: ";
+            cin >> r;
+            sll.delete_student(r);
+        } 
+        else if (choice == 3) {
+            int r;
+            string n;
+            float m;
+            cout << "Enter Roll No to update: ";
+            cin >> r;
+            cout << "Enter New Name: ";
+            cin >> n;
+            cout << "Enter New Marks: ";
+            cin >> m;
+            sll.update_student(r, n, m);
+        } 
+        else if (choice == 4) {
+            int r;
+            cout << "Enter Roll No to search: ";
+            cin >> r;
+            sll.search_student(r);
+        } 
+        else if (choice == 5) {
+            sll.display_students();
+        } 
+        else if (choice == 6) {
+            string k, o;
+            cout << "Sort by (roll_no/marks): ";
+            cin >> k;
+            cout << "Order (asc/desc): ";
+            cin >> o;
+            sll.sort_students(k, o);
+        } 
+        else if (choice == 7) {
+            cout << "Exiting...\n";
+            break;
+        } 
+        else {
+            cout << "Invalid choice! Try again.\n";
         }
-        else if(ch==2){
-            int r; cout<<"Roll: "; cin>>r; cin.ignore(numeric_limits<streamsize>::max(),'\n'); s.remove(r);
-        }
-        else if(ch==3){
-            int r; string n; float m=-1;
-            cout<<"Roll: "; cin>>r; cin.ignore(numeric_limits<streamsize>::max(),'\n');
-            cout<<"New Name (leave empty to skip): "; getline(cin,n);
-            string tmp;
-            cout<<"New Marks (leave empty to skip): "; getline(cin,tmp);
-            if(!tmp.empty()){ try{ m=stof(tmp); } catch(...){ m=-1; } }
-            s.update(r,n,m);
-        }
-        else if(ch==4){
-            int r; cout<<"Roll: "; cin>>r; cin.ignore(numeric_limits<streamsize>::max(),'\n'); s.search(r);
-        }
-        else if(ch==5) s.display();
-        else if(ch==6) s.sort(false,false);
-        else if(ch==7) s.sort(true,true);
-    }while(ch!=8);
-    cout<<"Exiting...\n";
+    }
+
     return 0;
 }
