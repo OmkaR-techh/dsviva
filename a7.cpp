@@ -1,117 +1,69 @@
-#include <iostream>
-using namespace std;
+class HashTable:
+    def __init__(self, size):
+        self.size = size
+        self.table = []
+        for i in range(size):
+            self.table.append(None)
+        self.deleted = "<del>"
 
-#define SIZE 10
+    def hash_function(self, key):
+        return key % self.size
 
-class HashTable {
-private:
-    int table[SIZE];
-    bool occupied[SIZE];
+    def insert(self, key):
+        idx = self.hash_function(key)
+        start = idx
+        while self.table[idx] not in (None, self.deleted):
+            if self.table[idx] == key:
+                print("Key already exists")
+                return
+            idx = (idx + 1) % self.size
+            if idx == start:
+                print("Table full!")
+                return
+        self.table[idx] = key
+        print("Inserted")
 
-public:
-    HashTable() {
-        for (int i = 0; i < SIZE; i++) {
-            table[i] = -1;
-            occupied[i] = false;
-        }
-    }
+    def search(self, key):
+        idx = self.hash_function(key)
+        start = idx
+        while self.table[idx] is not None:
+            if self.table[idx] == key:
+                print(f"Found at index {idx}")
+                return idx
+            idx = (idx + 1) % self.size
+            if idx == start:
+                break
+        print("Not found")
+        return None
 
-    int hashFunction(int key) {
-        return key % SIZE;
-    }
+    def delete(self, key):
+        idx = self.search(key)
+        if idx is not None:
+            self.table[idx] = self.deleted
+            print("Deleted")
 
-    void insert(int key) {
-        int index = hashFunction(key);
-        int originalIndex = index;
-        int i = 0;
-        while (occupied[index] && i < SIZE) {
-            index = (originalIndex + ++i) % SIZE;
-        }
-        if (i == SIZE) {
-            cout << "Hash Table is full. Cannot insert " << key << endl;
-            return;
-        }
-        table[index] = key;
-        occupied[index] = true;
-        cout << "Inserted key " << key << " at index " << index << endl;
-    }
+    def display(self):
+        print("\nHash Table:")
+        for i, val in enumerate(self.table):
+            print(i,":", val)
 
-    void search(int key) {
-        int index = hashFunction(key);
-        int originalIndex = index;
-        int i = 0;
-        while (occupied[index] && i < SIZE) {
-            if (table[index] == key) {
-                cout << "Key " << key << " found at index " << index << endl;
-                return;
-            }
-            index = (originalIndex + ++i) % SIZE;
-        }
-        cout << "Key " << key << " not found." << endl;
-    }
 
-    void remove(int key) {
-        int index = hashFunction(key);
-        int originalIndex = index;
-        int i = 0;
-        while (occupied[index] && i < SIZE) {
-            if (table[index] == key) {
-                table[index] = -1;
-                occupied[index] = false;
-                cout << "Deleted key " << key << " from index " << index << endl;
-                return;
-            }
-            index = (originalIndex + ++i) % SIZE;
-        }
-        cout << "Key " << key << " not found. Cannot delete." << endl;
-    }
+if __name__ == "__main__":
+    size = int(input("Enter table size: "))
+    h = HashTable(size)
 
-    void display() {
-        cout << "\n--- Hash Table ---\n";
-        for (int i = 0; i < SIZE; i++) {
-            if (occupied[i])
-                cout << "Index " << i << " : " << table[i] << endl;
-            else
-                cout << "Index " << i << " : (empty)" << endl;
-        }
-        cout << "-------------------\n";
-    }
-};
-
-int main() {
-    HashTable ht;
-    int choice, key;
-
-    while (true) {
-        cout << "\n1. Insert  2. Search  3. Delete  4. Display  5. Exit\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
-
-        switch (choice) {
-        case 1:
-            cout << "Enter key to insert: ";
-            cin >> key;
-            ht.insert(key);
-            break;
-        case 2:
-            cout << "Enter key to search: ";
-            cin >> key;
-            ht.search(key);
-            break;
-        case 3:
-            cout << "Enter key to delete: ";
-            cin >> key;
-            ht.remove(key);
-            break;
-        case 4:
-            ht.display();
-            break;
-        case 5:
-            cout << "Exiting program." << endl;
-            return 0;
-        default:
-            cout << "Invalid choice! Try again.\n";
-        }
-    }
-    return 0;
-}
+    while True:
+        print("\n1.Insert  2.Search  3.Delete  4.Display  5.Exit")
+        ch = int(input("Choice: "))
+        if ch == 1:
+            h.insert(int(input("Key: ")))
+        elif ch == 2:
+            h.search(int(input("Key: ")))
+        elif ch == 3:
+            h.delete(int(input("Key: ")))
+        elif ch == 4:
+            h.display()
+        elif ch == 5:
+            break
+        else:
+            print("Invalid")
