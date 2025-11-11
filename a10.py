@@ -1,130 +1,330 @@
-class Node:
-    def __init__(self, city, population):
-        self.city = city
-        self.population = population
-        self.left = None
-        self.right = None
+#include <iostream>
+#include <string>
+using namespace std;
 
-class CityBST:
-    def __init__(self):
-        self.root = None
+class Node {
+public:
+    string city;
+    int population;
+    Node* left;
+    Node* right;
 
-    def insert(self, root, city, population):
-        if root is None:
-            return Node(city, population)
-        if city.lower() < root.city.lower():
-            root.left = self.insert(root.left, city, population)
-        elif city.lower() > root.city.lower():
-            root.right = self.insert(root.right, city, population)
-        else:
-            print("City already exists! Use Update option.")
-        return root
+    Node(string c, int p) {
+        city = c;
+        population = p;
+        left = right = NULL;
+    }
+};
 
-    def search(self, root, city):
-        comparisons = 0
-        while root:
-            comparisons += 1
-            if city.lower() == root.city.lower():
-                return root, comparisons
-            elif city.lower() < root.city.lower():
-                root = root.left
-            else:
-                root = root.right
-        return None, comparisons
+// -----------------------------
+// Iterative Insertion in BST
+// -----------------------------
+Node* insertCity(Node* root, string city, int population) {
+    Node* newNode = new Node(city, population);
 
-    def update_population(self, root, city, new_pop):
-        node, comparisons = self.search(root, city)
-        if node:
-            node.population = new_pop
-            print(f"Population for {city} updated to {new_pop}.")
-        else:
-            print(f"{city} not found.")
-        print(f"Comparisons made: {comparisons}")
+    if (root == NULL)
+        return newNode; // empty tree
 
-    def find_min(self, root):
-        while root.left:
-            root = root.left
-        return root
+    Node* curr = root;
+    Node* parent = NULL;
 
-    def delete(self, root, city):
-        if root is None:
-            return root
-        if city.lower() < root.city.lower():
-            root.left = self.delete(root.left, city)
-        elif city.lower() > root.city.lower():
-            root.right = self.delete(root.right, city)
-        else:
-            if root.left is None:
-                return root.right
-            elif root.right is None:
-                return root.left
-            temp = self.find_min(root.right)
-            root.city, root.population = temp.city, temp.population
-            root.right = self.delete(root.right, temp.city)
-        return root
+    while (curr != NULL) {
+        parent = curr;
+        if (city < curr->city)
+            curr = curr->left;
+        else if (city > curr->city)
+            curr = curr->right;
+        else {
+            cout << "City already exists! Updating population.\n";
+            curr->population = population;
+            delete newNode;
+            return root;
+        }
+    }
 
-    def display_ascending(self, root):
-        if root:
-            self.display_ascending(root.left)
-            print(f"{root.city} → Population: {root.population}")
-            self.display_ascending(root.right)
+    if (city < parent->city)
+        parent->left = newNode;
+    else
+        parent->right = newNode;
 
-    def display_descending(self, root):
-        if root:
-            self.display_descending(root.right)
-            print(f"{root.city} → Population: {root.population}")
-            self.display_descending(root.left)
+    return root;
+}
 
-bst = CityBST()
-root = None
+// -----------------------------
+// Search City (Iterative)
+// -----------------------------
+bool searchCity(Node* root, string city, int& comparisons) {
+    Node* curr = root;
+    comparisons = 0;
 
-while True:
-    print("\n--- City Population Management using BST ---")
-    print("1. Add City")
-    print("2. Delete City")
-    print("3. Update Population")
-    print("4. Display Cities Ascending")
-    print("5. Display Cities Descending")
-    print("6. Search City and Show Comparisons")
-    print("7. Exit")
+    while (curr != NULL) {
+        comparisons++;
+        if (curr->city == city) {
+            cout << "City found! Population: " << curr->population << endl;
+            return true;
+        } else if (city < curr->city)
+            curr = curr->left;
+        else
+            curr = curr->right;
+    }
 
-    choice = int(input("Enter your choice: "))
+    return false;
+}
 
-    if choice == 1:
-        city = input("Enter city name: ")
-        pop = int(input("Enter population: "))
-        root = bst.insert(root, city, pop)
+// -----------------------------
+// Update City Population (Iterative)
+// -----------------------------
+void updatePopulation(Node* root, string city, int newPop) {
+    Node* curr = root;
+    while (curr != NULL) {
+        if (curr->city == city) {
+            curr->population = newPop;
+            cout << "Population updated successfully!\n";
+            return;
+        } else if (city < curr->city)
+            curr = curr->left;
+        else
+            curr = curr->right;
+    }
+    cout << "City not found!\n";
+}
 
-    elif choice == 2:
-        city = input("Enter city name to delete: ")
-        root = bst.delete(root, city)
-        print("City deleted (if found).")
+// -----------------------------
+// Delete a City (Iterative)
+// -----------------------------
+Node* deleteCity(Node* root, string city) {
+    Node* curr = root;
+    Node* parent = NULL;
 
-    elif choice == 3:
-        city = input("Enter city name to update: ")
-        new_pop = int(input("Enter new population: "))
-        bst.update_population(root, city, new_pop)
+    // Step 1: Find the node to delete
+    while (curr != NULL && curr->city != city) {
+        parent = curr;
+        if (city < curr->city)
+            curr = curr->left;
+        else
+            curr = curr->right;
+    }
 
-    elif choice == 4:
-        print("\nCities in Ascending Order:")
-        bst.display_ascending(root)
+    // If node not found
+    if (curr == NULL) {
+        cout << "City not found!" << endl;
+        return root;
+    }
 
-    elif choice == 5:
-        print("\nCities in Descending Order:")
-        bst.display_descending(root)
+    // ==============================
+    // CASE 1: Node with ZERO children
+    // ==============================
+    if (curr->left == NULL && curr->right == NULL) {
+        // If deleting root node
+        if (parent == NULL) {
+            delete curr;
+            return NULL; // Tree becomes empty
+        }
 
-    elif choice == 6:
-        city = input("Enter city name to search: ")
-        node, comp = bst.search(root, city)
-        if node:
-            print(f"City found! {city} → Population: {node.population}")
-        else:
-            print("City not found!")
-        print(f"Comparisons made: {comp}")
+        // Disconnect leaf node from parent
+        if (parent->left == curr)
+            parent->left = NULL;
+        else
+            parent->right = NULL;
 
-    elif choice == 7:
-        print("Exiting...")
-        break
+        delete curr;
+    }
 
-    else:
-        print("Invalid choice! Try again.")
+    // ==============================
+    // CASE 2: Node with ONE child
+    // ==============================
+    else if (curr->left == NULL || curr->right == NULL) {
+        Node* child;
+        if (curr->left != NULL)
+            child = curr->left;
+        else
+            child = curr->right;
+
+        // If deleting root node
+        if (parent == NULL) {
+            delete curr;
+            return child; // Child becomes new root
+        }
+
+        // Connect parent directly to the child
+        if (parent->left == curr)
+            parent->left = child;
+        else
+            parent->right = child;
+
+        delete curr;
+    }
+
+    // ==============================
+    // CASE 3: Node with TWO children
+    // ==============================
+    else {
+        // Find inorder successor (next bigger node)
+        Node* curr1 = curr->right;
+        Node* parent1 = curr;
+
+        // Go to leftmost node in right subtree
+        while (curr1->left != NULL) {
+            parent1 = curr1;
+            curr1 = curr1->left;
+        }
+
+        // Copy successor's data into current node
+        curr->city = curr1->city;
+        curr->population = curr1->population;
+
+        // Delete the inorder successor node
+        if (parent1->left == curr1)
+            parent1->left = curr1->right;
+        else
+            parent1->right = curr1->right;
+
+        delete curr1;
+    }
+
+    return root;
+}
+
+
+// -----------------------------
+// Iterative Inorder Traversal (Ascending Order)
+// -----------------------------
+void displayAscending(Node* root) {
+    Node* stack[100];
+    int top = -1;
+    Node* curr = root;
+
+    if (root == NULL) {
+        cout << "No cities in record.\n";
+        return;
+    }
+
+    cout << "\nCities in Ascending Order:\n";
+
+    while (curr != NULL || top != -1) {
+        while (curr != NULL) {
+            stack[++top] = curr;
+            curr = curr->left;
+        }
+        curr = stack[top--];
+        cout << curr->city << " (" << curr->population << ")\n";
+        curr = curr->right;
+    }
+}
+
+// -----------------------------
+// Iterative Reverse Inorder Traversal (Descending Order)
+// -----------------------------
+void displayDescending(Node* root) {
+    Node* stack[100];
+    int top = -1;
+    Node* curr = root;
+
+    if (root == NULL) {
+        cout << "No cities in record.\n";
+        return;
+    }
+
+    cout << "\nCities in Descending Order:\n";
+
+    while (curr != NULL || top != -1) {
+        while (curr != NULL) {
+            stack[++top] = curr;
+            curr = curr->right;
+        }
+        curr = stack[top--];
+        cout << curr->city << " (" << curr->population << ")\n";
+        curr = curr->left;
+    }
+}
+
+// -----------------------------
+// Input Function
+// -----------------------------
+void takeInput(Node*& root) {
+    string city;
+    int population;
+    cout << "Enter city name and population (-1 to stop): ";
+    while (true) {
+        cin >> city;
+        if (city == "-1")
+            break;
+        cin >> population;
+        root = insertCity(root, city, population);
+    }
+}
+
+// -----------------------------
+// Main Function
+// -----------------------------
+int main() {
+    Node* root = NULL;
+    int choice, population, comparisons;
+    string city;
+
+    do {
+        cout << "\n----------------------------";
+        cout << "\n CITY POPULATION MANAGEMENT ";
+        cout << "\n----------------------------";
+        cout << "\n1. Add City";
+        cout << "\n2. Delete City";
+        cout << "\n3. Update Population";
+        cout << "\n4. Display Cities (Ascending)";
+        cout << "\n5. Display Cities (Descending)";
+        cout << "\n6. Search City";
+        cout << "\n7. Exit";
+        cout << "\nEnter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            cout << "Enter city name: ";
+            cin >> city;
+            cout << "Enter population: ";
+            cin >> population;
+            root = insertCity(root, city, population);
+            break;
+
+        case 2:
+            cout << "Enter city name to delete: ";
+            cin >> city;
+            root = deleteCity(root, city);
+            break;
+
+        case 3:
+            cout << "Enter city name to update: ";
+            cin >> city;
+            cout << "Enter new population: ";
+            cin >> population;
+            updatePopulation(root, city, population);
+            break;
+
+        case 4:
+            displayAscending(root);
+            break;
+
+        case 5:
+            displayDescending(root);
+            break;
+
+        case 6:
+            cout << "Enter city name to search: ";
+            cin >> city;
+            if (searchCity(root, city, comparisons))
+                cout << "Comparisons made: " << comparisons << endl;
+            else
+                cout << "City not found! Comparisons made: " << comparisons << endl;
+            break;
+
+        case 7:
+            cout << "Exiting program...\n";
+            break;
+
+        default:
+            cout << "Invalid choice! Try again.\n";
+        }
+
+    } while (choice != 7);
+
+    return 0;
+}
